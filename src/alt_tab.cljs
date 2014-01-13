@@ -6,26 +6,21 @@
   (:require-macros [lt.macros :refer [behavior]]))
 
 (behavior ::track-active
-          :for #{:editor}
-          :triggers #{:active}
+          :for #{:tabset.tab}
+          :triggers #{:show}
           :reaction (fn [this]
-                      (object/merge! this {::activation-time (new js/Date)})))
+                      (object/merge! this {::last-activated (new js/Date)})))
 
-
-(defn current-editors []
+(defn current-tabs []
   (if-let [ts (ctx/->obj :tabset)]
-    (sort (fn [e1 e2]
-            (let [t1 (or (::activation-time @e1) 0)
-                  t2 (or (::activation-time @e2) 0)]
-              (- t2 t1)))
-          (:objs @ts))))
-
-(defn last-active []
-  (second (current-editors)))
-
+    (->> (:objs @ts)
+         (sort (fn [o1 o2]
+                 (let [t1 (or (::last-activated @o1) 0)
+                       t2 (or (::last-activated @o2) 0)]
+                   (- t2 t1)))))))
 
 (cmd/command {:command ::prev
-              :desc "Go to previously used tab"
+              :desc "Tabs: Go to previously used tab"
               :exec (fn []
-                      (when-let [ed (last-active)]
+                      (when-let [ed (second (current-tabs))]
                         (tabs/active! ed)))})
