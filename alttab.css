@@ -1,0 +1,31 @@
+.AltTab {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding-top: 10%;
+}
+
+.AltTab > table {
+  padding: 10px;
+  background-color: black;
+  color: #ccc;
+  opacity: 0.9;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.AltTab > table > tr > td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.AltTab-align-right {
+  text-align: right;
+}
+
+.AltTab-pad {
+  padding-right: 20px;
+}

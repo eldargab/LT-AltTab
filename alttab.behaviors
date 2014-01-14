@@ -1,3 +1,4 @@
 {:+ {:app [(:lt.objs.plugins/load-js "alttab_compiled.js" true)
+           (:lt.objs.plugins/load-css "alttab.css" true)
            (:lt.objs.plugins/load-keymap "alttab.keymap")]
      :tabset.tab [:alt-tab/track-active]}}
