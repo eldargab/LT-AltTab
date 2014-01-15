@@ -1,4 +1,9 @@
 {:+ {:app [(:lt.objs.plugins/load-js "alttab_compiled.js" true)
            (:lt.objs.plugins/load-css "alttab.css" true)
            (:lt.objs.plugins/load-keymap "alttab.keymap")]
-     :tabset.tab [:alt-tab/track-active]}}
+     :tabset.tab [:alt-tab/track-active]
+     :alt-tab/dialog [:alt-tab/show
+                      :alt-tab/close
+                      :alt-tab/done
+                      :alt-tab/select-by-index
+                      :alt-tab/select-by-object]}}
