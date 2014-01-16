@@ -1,2 +1,4 @@
-{:+ {:tabs {"ctrl-tab" [:alt-tab/prev]
-            "ctrl-shift-tab" [:alt-tab/call]}}}
+{:+ {:tabs {"ctrl-tab" [:alt-tab/alt-tab]}
+     :alt-tab/dialog {"ctrl-shift" [:alt-tab/select-prev]
+                      "ctrl-up" [:alt-tab/select-prev]
+                      "ctrl-down" [:alt-tab/select-next]}}}

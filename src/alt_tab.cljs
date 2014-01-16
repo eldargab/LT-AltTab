@@ -66,16 +66,17 @@
      [:span.dir (print-dir path)]
      [:span.name name]
      [:sup (if dirty? "*" "")]])
-
-  :mouseover #(object/raise dialog :select.object obj))
+  :mouseover #(object/raise dialog :select.object obj)
+  ;; TODO: for some reason click event is not fired when Ctrl is still pressed
+  :mouseup #(object/raise dialog :done))
 
 (defui dialog [this]
-  [:div.AltTab
+  [:div.AltTab {:tabindex -1}
    [:ul
     (for [obj (:tabs @this)]
       (item this obj))]]
-
-  :click #(object/raise this :done))
+  :keyup #(when (= "Control" (.-keyIdentifier %))
+            (object/raise this :done)))
 
 (object/object* ::dialog
                 :tags #{::dialog}
@@ -102,38 +103,50 @@
           :triggers #{:select.index}
           :reaction (fn [this idx]
                       (let [tabs (:tabs @this)
-                            max-idx (count tabs)
+                            max-idx (dec (count tabs))
                             idx (cond (> idx max-idx) 0
                                       (> 0 idx) max-idx
                                       :else idx)
                             obj (nth tabs idx)]
                         (select this obj idx))))
 
+(behavior ::select-next
+          :triggers #{:select.next}
+          :reaction (fn [this]
+                      (let [idx (->index (:tabs @this) (:selected @this))]
+                        (object/raise this :select.index (inc idx)))))
+
+(behavior ::select-prev
+          :triggers #{:select.prev}
+          :reaction (fn [this]
+                      (let [idx (->index (:tabs @this) (:selected @this))]
+                        (object/raise this :select.index (dec idx)))))
+
 (behavior ::done
           :triggers #{:done}
           :reaction (fn [this]
-                      (if-let [obj (or (:selected @this) (-> @this :tabs second))]
-                        (tabs/active! obj)) ;; TODO: tab may be already closed at that point
-                      (object/raise this :close)))
+                      (object/raise this :close)
+                      (when-let [obj (or (:selected @this) (-> @this :tabs second))]
+                        (when (->index (current-tabs) obj)
+                          (tabs/active! obj)))))
 
 (behavior ::close
           :triggers #{:close}
           :reaction (fn [this]
-                      (object/merge! this {:closed true})
+                      (ctx/out! ::dialog)
                       (dom/add-class (object/->content this) :AltTab-hidden)
-                      (wait 500 #(object/destroy! this))))
+                      (wait 1000 #(object/destroy! this))))
 
 (behavior ::show
           :triggers #{:show}
-          :throttle 300
           :reaction (fn [this]
-                      (if-not (:closed @this)
-                        (let [el (object/->content this)]
-                          (dom/add-class el :AltTab-hidden)
-                          (object/raise this :select.index 1)
-                          (dom/append (dom/$ "body") el)
-                          (dom/remove-class el :AltTab-hidden)
-                          (dom/focus el)))))
+                      (ctx/in! ::dialog this)
+                      (let [el (object/->content this)]
+                        (dom/add-class el :AltTab-hidden)
+                        (object/raise this :select.index 1)
+                        (dom/append (dom/$ "body") el)
+                        (dom/focus el)
+                        (dom/remove-class el :AltTab-hidden))))
 
 (cmd/command {:command ::prev
               :desc "Tabs: Go to previously used tab"
@@ -141,8 +154,35 @@
                       (when-let [ed (second (current-tabs))]
                         (tabs/active! ed)))})
 
-(cmd/command {:command ::call
-              :desc "Tabs: Start AltTab dialog"
+(cmd/command {:command ::alt-tab
+              :desc "Tabs: Do Alt-Tabbing"
+              :hidden true
               :exec (fn []
-                      (-> (object/create ::dialog (current-tabs))
-                          (object/raise :show)))})
+                      (if-let [dialog (ctx/->obj ::dialog)]
+                        (object/raise dialog :select.next)
+                        (let [tabs (current-tabs)]
+                          (if (> (count tabs) 0)
+                            (-> (object/create ::dialog tabs)
+                                (object/raise :show))))))})
+
+(cmd/command {:command ::select-prev
+              :desc "AltTab: Select previous item"
+              :hidden true
+              :exec (fn []
+                      (when-let [dialog (ctx/->obj ::dialog)]
+                        (object/raise dialog :select.prev)))})
+
+(cmd/command {:command ::select-next
+              :desc "AltTab: Select next item"
+              :hidden true
+              :exec (fn []
+                      (when-let [dialog (ctx/->obj ::dialog)]
+                        (object/raise dialog :select.next)))})
+
+(cmd/command {:command ::close-current-tab-and-go-to-previously-used
+              :desc "Tabs: Close current tab and go to previously used"
+              :exec (fn []
+                      (let [next-tab (second (current-tabs))]
+                        (cmd/exec! :tabs.close)
+                        (if next-tab
+                          (tabs/active! next-tab))))})

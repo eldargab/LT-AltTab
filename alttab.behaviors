@@ -6,4 +6,6 @@
                       :alt-tab/close
                       :alt-tab/done
                       :alt-tab/select-by-index
-                      :alt-tab/select-by-object]}}
+                      :alt-tab/select-by-object
+                      :alt-tab/select-next
+                      :alt-tab/select-prev]}}
