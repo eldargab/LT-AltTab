@@ -135,7 +135,7 @@
           :reaction (fn [this]
                       (ctx/out! ::dialog)
                       (dom/add-class (object/->content this) :AltTab-hidden)
-                      (wait 1000 #(object/destroy! this))))
+                      (wait 300 #(object/destroy! this))))
 
 (behavior ::show
           :triggers #{:show}
