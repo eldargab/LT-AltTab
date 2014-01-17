@@ -1,4 +1,4 @@
-(ns alt-tab
+(ns lt.plugins.alt-tab
   (:require [lt.object :as object]
             [lt.objs.context :as ctx]
             [lt.objs.command :as cmd]
@@ -55,7 +55,7 @@
         (trim-ws-dir)
         (trim-home-dir)
         (files/parent)
-        (str files/separator))
+        (#(if (= "." %) "" (str % files/separator))))
     ""))
 
 (defui item [dialog obj]

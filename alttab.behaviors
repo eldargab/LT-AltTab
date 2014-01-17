@@ -1,11 +1,11 @@
 {:+ {:app [(:lt.objs.plugins/load-js "alttab_compiled.js" true)
            (:lt.objs.plugins/load-css "alttab.css" true)
            (:lt.objs.plugins/load-keymap "alttab.keymap")]
-     :tabset.tab [:alt-tab/track-active]
-     :alt-tab/dialog [:alt-tab/show
-                      :alt-tab/close
-                      :alt-tab/done
-                      :alt-tab/select-by-index
-                      :alt-tab/select-by-object
-                      :alt-tab/select-next
-                      :alt-tab/select-prev]}}
+     :tabset.tab [:lt.plugins.alt-tab/track-active]
+     :lt.plugins.alt-tab/dialog [:lt.plugins.alt-tab/show
+                                 :lt.plugins.alt-tab/close
+                                 :lt.plugins.alt-tab/done
+                                 :lt.plugins.alt-tab/select-by-index
+                                 :lt.plugins.alt-tab/select-by-object
+                                 :lt.plugins.alt-tab/select-next
+                                 :lt.plugins.alt-tab/select-prev]}}
