@@ -32,6 +32,22 @@
         idx
         (recur (next lst) (inc idx))))))
 
+(defn not-closed? [tab]
+  (->index (current-tabs) tab))
+
+(defn activate! [tab]
+  (when (not-closed? tab)
+    (tabs/active! tab)))
+
+(defn close! [tab]
+  (when (not-closed? tab)
+    (try
+      (object/raise tab :close)
+      (catch js/Error e
+        (js/lt.objs.console.error e))
+      (catch js/global.Error e
+        (js/lt.objs.console.error e)))))
+
 (defn relative [from to]
   (.relative files/fpath from to))
 
@@ -68,7 +84,9 @@
      [:sup (if dirty? "*" "")]])
   :mouseover #(object/raise dialog :select.object obj)
   ;; TODO: for some reason click event is not fired when Ctrl is still pressed
-  :mouseup #(object/raise dialog :done))
+  :mouseup #(if (= 2 (.-button %))
+              (object/raise dialog :delete.selected)
+              (object/raise dialog :done)))
 
 (defui dialog [this]
   [:div.AltTab {:tabindex -1}
@@ -81,23 +99,44 @@
 (object/object* ::dialog
                 :tags #{::dialog}
                 :selected nil
-                :closed false
                 :init (fn [this tabs]
                         (object/merge! this {:tabs (vec tabs)})
                         (dialog this)))
 
-(defn select [this obj idx]
+(defn for-each-item [this f]
+  (loop [i 0 els (dom/$$ "li" (object/->content this))]
+    (when-let [el (first els)]
+      (f i el)
+      (recur (inc i) (next els)))))
+
+(defn select! [this obj idx]
   (object/merge! this {:selected obj})
-  (doseq [[i li] (map-indexed vector (dom/$$ "li" (object/->content this)))]
-    (if (= idx i)
-      (dom/add-class li :selected)
-      (dom/remove-class li :selected))))
+  (for-each-item this (fn [i el]
+                        (if (= idx i)
+                          (dom/add-class el :selected)
+                          (dom/remove-class el :selected)))))
+
+(defn remove! [this obj idx]
+  (object/update! this [:tabs] #(->> %
+                                     (map-indexed (fn [i o] (if (not= i idx) o)))
+                                     (filterv identity)))
+  (for-each-item this (fn [i el]
+                        (when (= i idx)
+                          (dom/remove el))))
+  (object/raise this :select.index idx)
+  (close! obj)
+  (when-not (= (-> @this :tabs first) (tabs/active-tab))
+    (activate! (-> @this :tabs first)))
+  (dom/focus (object/->content this)))
+
+(defn ->selected-idx [this]
+  (->index (:tabs @this) (:selected @this)))
 
 (behavior ::select-by-object
           :triggers #{:select.object}
           :reaction (fn [this obj]
                       (let [idx (->index (:tabs @this) obj)]
-                        (select this obj idx))))
+                        (select! this obj idx))))
 
 (behavior ::select-by-index
           :triggers #{:select.index}
@@ -108,27 +147,32 @@
                                       (> 0 idx) max-idx
                                       :else idx)
                             obj (nth tabs idx)]
-                        (select this obj idx))))
+                        (select! this obj idx))))
 
 (behavior ::select-next
           :triggers #{:select.next}
           :reaction (fn [this]
-                      (let [idx (->index (:tabs @this) (:selected @this))]
+                      (let [idx (->selected-idx this)]
                         (object/raise this :select.index (inc idx)))))
 
 (behavior ::select-prev
           :triggers #{:select.prev}
           :reaction (fn [this]
-                      (let [idx (->index (:tabs @this) (:selected @this))]
+                      (let [idx (->selected-idx this)]
                         (object/raise this :select.index (dec idx)))))
 
+(behavior ::delete-selected
+          :triggers #{:delete.selected}
+          :reaction (fn [this]
+                      (when-let [obj (:selected @this)]
+                        (when-not (:dirty @obj)
+                          (remove! this obj (->selected-idx this))))))
 (behavior ::done
           :triggers #{:done}
           :reaction (fn [this]
                       (object/raise this :close)
                       (when-let [obj (or (:selected @this) (-> @this :tabs second))]
-                        (when (->index (current-tabs) obj)
-                          (tabs/active! obj)))))
+                        (activate! obj))))
 
 (behavior ::close
           :triggers #{:close}
@@ -178,6 +222,13 @@
               :exec (fn []
                       (when-let [dialog (ctx/->obj ::dialog)]
                         (object/raise dialog :select.next)))})
+
+(cmd/command {:command ::delete-selected
+              :desc "AltTab: Close selected item"
+              :hidden true
+              :exec (fn []
+                      (when-let [dialog (ctx/->obj ::dialog)]
+                        (object/raise dialog :delete.selected)))})
 
 (cmd/command {:command ::close-current-tab-and-go-to-previously-used
               :desc "Tabs: Close current tab and go to previously used"

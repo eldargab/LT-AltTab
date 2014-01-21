@@ -1,4 +1,5 @@
 {:+ {:tabs {"ctrl-tab" [:lt.plugins.alt-tab/alt-tab]}
      :lt.plugins.alt-tab/dialog {"ctrl-shift" [:lt.plugins.alt-tab/select-prev]
                                  "ctrl-up" [:lt.plugins.alt-tab/select-prev]
-                                 "ctrl-down" [:lt.plugins.alt-tab/select-next]}}}
+                                 "ctrl-down" [:lt.plugins.alt-tab/select-next]
+                                 "ctrl-x" [:lt.plugins.alt-tab/delete-selected]}}}

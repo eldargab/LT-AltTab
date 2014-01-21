@@ -8,4 +8,5 @@
                                  :lt.plugins.alt-tab/select-by-index
                                  :lt.plugins.alt-tab/select-by-object
                                  :lt.plugins.alt-tab/select-next
-                                 :lt.plugins.alt-tab/select-prev]}}
+                                 :lt.plugins.alt-tab/select-prev
+                                 :lt.plugins.alt-tab/delete-selected]}}
