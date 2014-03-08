@@ -8,7 +8,11 @@ LT plugin that provides windows Alt+Tab like experience for navigation between t
 
 Press `Ctrl-Tab`. Selection dialog ends when you release the `Ctrl` key.
 
-Press `Ctrl-Shift` if you accidentally skipped the desired item.
+Press `Shift` if you accidentally skipped the desired item.
+
+You can also use vim style `j`, `k` keys for navigation.
+
+You can close tabs via right click or by pressing `x`.
 
 Optionally assign shortcut to `:lt.plugins.alt-tab/close-current-tab-and-go-to-previously-used` command.
 

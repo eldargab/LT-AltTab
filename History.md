@@ -1,5 +1,11 @@
 
-0.2.0 / 2014-01-17
+0.2.0 / 2014-03-08
+==================
+
+ * add vim style `j`, `k` shortcuts for navigation
+ * add ability to close tabs
+
+0.1.0 / 2014-01-17
 ==================
 
  * migrate to new namespace
