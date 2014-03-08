@@ -135,7 +135,7 @@
 (behavior ::select-by-object
           :triggers #{:select.object}
           :reaction (fn [this obj]
-                      (let [idx (->index (:tabs @this) obj)]
+                      (if-let [idx (->index (:tabs @this) obj)]
                         (select! this obj idx))))
 
 (behavior ::select-by-index
@@ -145,20 +145,20 @@
                             max-idx (dec (count tabs))
                             idx (cond (> idx max-idx) 0
                                       (> 0 idx) max-idx
-                                      :else idx)
-                            obj (nth tabs idx)]
-                        (select! this obj idx))))
+                                      :else idx)]
+                        (when (>= max-idx 0)
+                          (select! this (nth tabs idx) idx)))))
 
 (behavior ::select-next
           :triggers #{:select.next}
           :reaction (fn [this]
-                      (let [idx (->selected-idx this)]
+                      (if-let [idx (->selected-idx this)]
                         (object/raise this :select.index (inc idx)))))
 
 (behavior ::select-prev
           :triggers #{:select.prev}
           :reaction (fn [this]
-                      (let [idx (->selected-idx this)]
+                      (if-let [idx (->selected-idx this)]
                         (object/raise this :select.index (dec idx)))))
 
 (behavior ::delete-selected
@@ -166,7 +166,9 @@
           :reaction (fn [this]
                       (when-let [obj (:selected @this)]
                         (when-not (:dirty @obj)
-                          (remove! this obj (->selected-idx this))))))
+                          (remove! this obj (->selected-idx this))
+                          (when (empty? (:tabs @this))
+                            (object/raise this :close))))))
 (behavior ::done
           :triggers #{:done}
           :reaction (fn [this]
