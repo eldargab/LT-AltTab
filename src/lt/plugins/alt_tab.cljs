@@ -93,7 +93,7 @@
    [:ul
     (for [obj (:tabs @this)]
       (item this obj))]]
-  :keyup #(when (= "Control" (.-keyIdentifier %))
+  :keyup #(when (= 17 (.-keyCode %))
             (object/raise this :done)))
 
 (object/object* ::dialog
